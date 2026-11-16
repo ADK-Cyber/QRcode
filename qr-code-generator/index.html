@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Generate QR codes and explore how their parts work.">
+  <title>QR Code Generator and Explorer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://github.com/nayuki/QR-Code-generator/releases/download/v1.8.0/qrcodegen-v1.8.0-es6.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="topbar">
+        <h1>QR Code Generator</h1>
+        <button id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">Dark mode</button>
+      </div>
+      <p class="intro">Make a QR code, then explore the patterns and information that make it work.</p>
+    </header>
+
+    <form id="qr-form" novalidate>
+      <label for="text-input">Text or URL</label>
+      <textarea id="text-input" name="text" maxlength="2953" rows="3" placeholder="https://example.com" aria-describedby="input-help error-message"></textarea>
+      <p id="input-help" class="help">Text is encoded in numeric, alphanumeric, or UTF-8 byte mode, whichever fits best.</p>
+
+      <div class="settings">
+        <div class="field">
+          <label for="ecc-select">Error correction</label>
+          <select id="ecc-select">
+            <option value="L">L — Low (about 7%)</option>
+            <option value="M" selected>M — Medium (about 15%)</option>
+            <option value="Q">Q — Quartile (about 25%)</option>
+            <option value="H">H — High (about 30%)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="version-select">QR version</label>
+          <select id="version-select">
+            <option value="auto" selected>Automatic (smallest that fits)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mask-select">Experiment mask</label>
+          <select id="mask-select">
+            <option value="auto" selected>Automatic (standard choice)</option>
+            <option value="0">Mask 0 — alternating checkerboard</option>
+            <option value="1">Mask 1 — alternating rows</option>
+            <option value="2">Mask 2 — every third column</option>
+            <option value="3">Mask 3 — diagonal stripes</option>
+            <option value="4">Mask 4 — repeating blocks</option>
+            <option value="5">Mask 5 — product pattern A</option>
+            <option value="6">Mask 6 — product pattern B</option>
+            <option value="7">Mask 7 — mixed diagonal pattern</option>
+          </select>
+        </div>
+      </div>
+      <p class="help">Every valid QR code uses a mask. The standard preview lets the encoder choose the best one; the experiment preview forces the selected pattern. A mask flips data modules according to a rule. It does not hide or encrypt your text.</p>
+
+      <p id="error-message" class="error" role="alert" aria-live="polite"></p>
+      <div class="actions">
+        <button type="submit">Generate QR</button>
+        <button id="download-button" type="button" disabled>Download experiment PNG</button>
+        <button id="clear-button" type="button">Clear</button>
+      </div>
+    </form>
+
+    <p id="code-summary" class="summary" aria-live="polite">Enter text and generate a QR code to begin.</p>
+
+    <section class="comparison" aria-label="QR code comparison">
+      <article class="qr-card">
+        <h2>Standard QR</h2>
+        <p id="standard-meta" class="meta">Automatic mask</p>
+        <div class="canvas-wrap"><canvas id="standard-canvas" aria-label="Standard QR code with automatic mask"></canvas></div>
+      </article>
+      <article class="qr-card">
+        <h2>Mask experiment</h2>
+        <p id="experiment-meta" class="meta">Choose a mask to compare</p>
+        <div class="canvas-wrap"><canvas id="experiment-canvas" aria-label="QR code using the selected mask"></canvas></div>
+      </article>
+    </section>
+
+    <section class="mask-demo" aria-labelledby="mask-demo-heading">
+      <h2 id="mask-demo-heading">See the mask being applied</h2>
+      <p>The first grid is the encoder’s pre-mask intermediate. It contains the encoded data and functional patterns, but it is not a finished QR code and may not scan. Choose the second view to see the selected mask applied.</p>
+      <div class="lesson-controls mask-stage-controls" role="group" aria-label="Mask application stages">
+        <button id="show-unmasked" type="button" aria-pressed="true">Before mask</button>
+        <button id="show-masked" type="button" aria-pressed="false">Apply selected mask</button>
+      </div>
+      <h3 id="mask-stage-title">Before mask (intermediate)</h3>
+      <p id="mask-stage-description" class="help">Generate a QR code to see the pre-mask data grid.</p>
+      <div class="canvas-wrap mask-stage-canvas-wrap"><canvas id="mask-stage-canvas" aria-label="Pre-mask QR code intermediate"></canvas></div>
+    </section>
+
+    <section class="explorer" aria-labelledby="parts-heading">
+      <h2 id="parts-heading">Explore the QR code parts</h2>
+      <p>Choose a part to outline its modules in both previews. The quiet zone is the white margin around the grid.</p>
+      <div id="part-list" class="part-list" role="group" aria-label="QR code parts">
+        <button type="button" data-part="all" aria-pressed="true">Whole code</button>
+        <button type="button" data-part="finder" aria-pressed="false">Finder + separators</button>
+        <button type="button" data-part="timing" aria-pressed="false">Timing</button>
+        <button type="button" data-part="alignment" aria-pressed="false">Alignment</button>
+        <button type="button" data-part="format" aria-pressed="false">Format information</button>
+        <button type="button" data-part="version" aria-pressed="false">Version information</button>
+        <button type="button" data-part="data" aria-pressed="false">Data codewords</button>
+        <button type="button" data-part="ecc" aria-pressed="false">Error-correction codewords</button>
+        <button type="button" data-part="remainder" aria-pressed="false">Remainder bits</button>
+      </div>
+      <p id="part-explanation" class="explanation" aria-live="polite">The QR grid contains functional patterns and a stream of data and error-correction bits. Four blank modules around the grid form its quiet zone.</p>
+    </section>
+
+    <section class="lesson" aria-labelledby="lesson-heading">
+      <h2 id="lesson-heading">Build it up, step by step</h2>
+      <p>This lesson explains the encoder’s real sequence. The previews stay as complete, valid QR codes; they are not presented as scannable partial codes.</p>
+      <div class="lesson-controls">
+        <button id="previous-step" type="button" disabled>Previous step</button>
+        <p id="step-count" class="meta">Step 1 of 5</p>
+        <button id="next-step" type="button">Next step</button>
+      </div>
+      <h3 id="step-title">1. Encode the input</h3>
+      <p id="step-description">The encoder chooses a compact mode for your text: numeric for digits, alphanumeric for a supported uppercase character set, or byte mode for general UTF-8 text.</p>
+      <p id="step-detail" class="help"></p>
+    </section>
+
+    <p class="footer-note">The grid is drawn from the encoder’s module data. Highlight outlines are a teaching overlay and are not included in downloaded PNGs.</p>
+  </main>
+</body>
+</html>
